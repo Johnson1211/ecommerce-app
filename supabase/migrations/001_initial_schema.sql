@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS orders (
   items JSONB NOT NULL DEFAULT '[]',
   subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
   total NUMERIC(10,2) NOT NULL DEFAULT 0,
-  status TEXT CHECK (status IN ('pending', 'processing', 'done', 'failed', 'paid', 'delivered')) DEFAULT 'pending',
+  status TEXT CHECK (status IN ('pending', 'processing', 'done', 'failed', 'paid', 'delivered', 'wrong_payment')) DEFAULT 'pending',
   paystack_ref TEXT,
   momo_transaction_id TEXT,
   momo_number TEXT,

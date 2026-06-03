@@ -9,7 +9,17 @@ import { Skeleton } from '../../components/ui/Skeleton'
 import { useToast } from '../../components/ui/Toast'
 import { formatCurrency, formatDate } from '../../lib/helpers'
 
-const statusOptions = ['pending', 'processing', 'done', 'failed', 'paid', 'delivered']
+const statusOptions = ['pending', 'processing', 'done', 'failed', 'paid', 'delivered', 'wrong_payment']
+
+const statusLabels = {
+  pending: 'Pending',
+  processing: 'Processing',
+  done: 'Completed',
+  failed: 'Failed',
+  paid: 'Paid',
+  delivered: 'Delivered',
+  wrong_payment: 'Wrong Payment Info',
+}
 
 export const Orders = () => {
   const [orders, setOrders] = useState([])
@@ -74,6 +84,7 @@ export const Orders = () => {
       paid: 'success',
       failed: 'danger',
       delivered: 'success',
+      wrong_payment: 'danger',
     }
     return colors[status] || 'default'
   }
@@ -88,7 +99,7 @@ export const Orders = () => {
         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
           className="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none bg-white">
           <option value="all">All Statuses</option>
-          {statusOptions.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
+          {statusOptions.map(s => <option key={s} value={s} className="capitalize">{statusLabels[s] || s}</option>)}
         </select>
       </div>
 
@@ -150,7 +161,7 @@ export const Orders = () => {
                         <div className="relative inline-block">
                           <select value={order.status} onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
                             className="appearance-none bg-transparent pr-6 py-1 text-xs font-medium focus:outline-none cursor-pointer">
-                            {statusOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                            {statusOptions.map(s => <option key={s} value={s}>{statusLabels[s] || s}</option>)}
                           </select>
                           <ChevronDown className="w-3 h-3 text-gray-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
                         </div>
@@ -194,7 +205,7 @@ export const Orders = () => {
                 <p className="text-sm text-gray-500">Order Reference</p>
                 <p className="font-mono font-semibold">{selectedOrder.paystack_ref}</p>
               </div>
-              <Badge variant={getStatusColor(selectedOrder.status)} className="capitalize text-sm">{selectedOrder.status}</Badge>
+              <Badge variant={getStatusColor(selectedOrder.status)} className="capitalize text-sm">{statusLabels[selectedOrder.status] || selectedOrder.status}</Badge>
             </div>
 
              <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
@@ -284,13 +295,18 @@ export const Orders = () => {
               </div>
               <div className="flex flex-wrap gap-2 justify-end">
                 {selectedOrder.status === 'pending' && selectedOrder.momo_transaction_id && (
-                  <Button size="sm" variant="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'processing')}>
-                    Approve Payment (Start Processing)
-                  </Button>
+                  <>
+                    <Button size="sm" variant="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'processing')}>
+                      Approve Payment
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => handleUpdateStatus(selectedOrder.id, 'wrong_payment')}>
+                      Wrong Payment Info
+                    </Button>
+                  </>
                 )}
-                {statusOptions.filter(s => s !== selectedOrder.status && s !== 'paid' && s !== 'delivered').map(s => (
+                {statusOptions.filter(s => s !== selectedOrder.status && s !== 'paid' && s !== 'delivered' && (selectedOrder.status !== 'pending' || (s !== 'wrong_payment' && s !== 'processing'))).map(s => (
                   <Button key={s} size="sm" variant="outline" onClick={() => handleUpdateStatus(selectedOrder.id, s)}>
-                    Mark {s}
+                    Mark {statusLabels[s] || s}
                   </Button>
                 ))}
               </div>

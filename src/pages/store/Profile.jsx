@@ -10,6 +10,16 @@ import { Modal } from '../../components/ui/Modal'
 import { Button } from '../../components/ui/Button'
 import { formatCurrency, formatDate } from '../../lib/helpers'
 
+const statusLabels = {
+  pending: 'Pending',
+  processing: 'Processing',
+  done: 'Completed',
+  failed: 'Failed',
+  paid: 'Paid',
+  delivered: 'Delivered',
+  wrong_payment: 'Wrong Payment Info',
+}
+
 export const Profile = () => {
   const { profile, user } = useAuth()
   const [orders, setOrders] = useState([])
@@ -134,6 +144,7 @@ export const Profile = () => {
       paid: 'success',
       failed: 'danger',
       delivered: 'success',
+      wrong_payment: 'danger',
     }
     return colors[status] || 'default'
   }
@@ -239,7 +250,7 @@ export const Profile = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={getStatusColor(order.status)} className="capitalize">
-                        {order.status}
+                        {statusLabels[order.status] || order.status}
                       </Badge>
                       <button
                         onClick={() => handleDeleteOrder(order.id)}
@@ -268,12 +279,23 @@ export const Profile = () => {
                         <span className="font-mono font-semibold bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{order.momo_transaction_id}</span>
                       </div>
                     )}
+                    {order.status === 'wrong_payment' && (
+                      <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-red-950">Order Not Processed (Wrong Payment Info)</p>
+                          <p className="mt-0.5 text-red-700 leading-relaxed">
+                            The MoMo Transaction ID you submitted could not be verified on our accounts. <strong>This order will not be processed.</strong> Please place a new order using the correct Transaction ID or contact support.
+                          </p>
+                        </div>
+                      </div>
+                    )}
                     <div className="border-t mt-3 pt-3 flex justify-between items-center">
                       <div>
                         <span className="text-sm font-semibold text-gray-900">Total: </span>
                         <span className="font-bold text-primary-600">{formatCurrency(order.total)}</span>
                       </div>
-                      {order.status !== 'failed' && (
+                      {order.status !== 'failed' && order.status !== 'wrong_payment' && (
                         <button
                           onClick={() => handleOpenReportModal(order)}
                           className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-2.5 py-1.5 rounded-lg border border-primary-200 transition-colors"

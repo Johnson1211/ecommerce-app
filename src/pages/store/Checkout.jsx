@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { MapPin, Phone, Mail, ArrowLeft, Lock, CreditCard } from 'lucide-react'
+import { MapPin, Phone, Mail, ArrowLeft, Lock, CreditCard, AlertTriangle } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { Button } from '../../components/ui/Button'
@@ -330,16 +330,20 @@ export const Checkout = () => {
                   className="w-full px-4 py-2.5 rounded-lg border border-primary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm font-semibold"
                   placeholder="e.g., 28394850384"
                 />
+                <p className="text-xs text-red-650 mt-1.5 font-medium flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0" />
+                  Wrong transaction ID will result in your order NOT being processed.
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3">
-            <Lock className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-primary-800">Verification Pending</p>
-              <p className="text-sm text-primary-700 mt-1">
-                Your order is processed manually. Once you submit, the merchant will verify the Transaction ID against their statement and fulfill the order.
+              <p className="text-sm font-medium text-amber-800">Verification & Processing Notice</p>
+              <p className="text-sm text-amber-700 mt-1">
+                Your order is verified manually. <strong>Please double-check that your Transaction ID is 100% correct.</strong> Submitting an incorrect or wrong ID will result in your order being rejected and marked as "Wrong Payment Info" (unprocessed).
               </p>
             </div>
           </div>
