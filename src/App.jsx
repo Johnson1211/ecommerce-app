@@ -27,6 +27,7 @@ import { Categories } from './pages/admin/Categories'
 import { Products } from './pages/admin/Products'
 import { DataPackages } from './pages/admin/DataPackages'
 import { Orders } from './pages/admin/Orders'
+import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
 
 const StoreLayout = ({ children }) => (
@@ -106,6 +107,7 @@ const AppRoutes = () => (
     <Route path="/admin/products" element={<ProtectedRoute requireAdmin><AdminLayout><Products /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/data-packages" element={<ProtectedRoute requireAdmin><AdminLayout><DataPackages /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminLayout><Orders /></AdminLayout></ProtectedRoute>} />
+    <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminLayout><Reports /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
 
     {/* Catch all */}
