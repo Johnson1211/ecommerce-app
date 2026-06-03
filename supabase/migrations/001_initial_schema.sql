@@ -273,7 +273,7 @@ ON CONFLICT DO NOTHING;
 
 -- Insert store settings
 INSERT INTO store_settings (store_name, contact_email) VALUES
-  ('BIG-BENZ SHOP', 'support@bigbenzshop.com')
+  ('BIG-BENZ SHOP', 'benjaminjohnson750@gmail.com')
 ON CONFLICT DO NOTHING;
 
 -- ============================================

@@ -41,11 +41,11 @@ export const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary-400" />
-                support@bigbenzshop.com
+                benjaminjohnson750@gmail.com
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary-400" />
-                +233 20 123 4567
+                0558802783
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary-400" />
