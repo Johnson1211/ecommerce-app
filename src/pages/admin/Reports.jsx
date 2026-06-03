@@ -49,6 +49,34 @@ export const Reports = () => {
 
       if (error) throw error
       addToast('Issue marked as Solved', 'success')
+      
+      // Find the report from state to send email notification to the customer
+      const report = reports.find(r => r.id === reportId)
+      if (report && report.user?.email) {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        
+        if (serviceId && templateId && publicKey) {
+          fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_id: serviceId,
+              template_id: templateId,
+              user_id: publicKey,
+              template_params: {
+                to_email: report.user.email,
+                customer_name: report.user.full_name || 'Customer',
+                order_ref: report.order_ref,
+                order_details: `Great news! Your support ticket regarding the package "${report.data_package_info}" has been resolved/solved by our admin team. Thank you for your patience!`,
+                total_amount: 'Solved'
+              }
+            })
+          }).catch(err => console.error('Failed to send resolution email:', err))
+        }
+      }
+
       loadReports()
     } catch (error) {
       addToast(error.message || 'Failed to resolve issue', 'error')

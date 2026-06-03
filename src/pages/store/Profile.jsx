@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Mail, Phone, ShoppingBag, Calendar, Package, Trash2 } from 'lucide-react'
+import { User, Mail, Phone, ShoppingBag, Calendar, Package, Trash2, AlertTriangle, CheckCircle } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Badge } from '../../components/ui/Badge'
@@ -13,6 +13,7 @@ import { formatCurrency, formatDate } from '../../lib/helpers'
 export const Profile = () => {
   const { profile, user } = useAuth()
   const [orders, setOrders] = useState([])
+  const [reports, setReports] = useState([])
   const [loading, setLoading] = useState(true)
   const { addToast } = useToast()
 
@@ -24,7 +25,10 @@ export const Profile = () => {
   const [submittingReport, setSubmittingReport] = useState(false)
 
   useEffect(() => {
-    if (user) loadOrders()
+    if (user) {
+      loadOrders()
+      loadReports()
+    }
   }, [user])
 
   const loadOrders = async () => {
@@ -37,6 +41,20 @@ export const Profile = () => {
 
     if (data) setOrders(data)
     setLoading(false)
+  }
+
+  const loadReports = async () => {
+    try {
+      const { data } = await supabase
+        .from('order_reports')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (data) setReports(data)
+    } catch (err) {
+      console.error('Failed to load support reports:', err)
+    }
   }
 
   const handleDeleteOrder = async (orderId) => {
@@ -100,6 +118,7 @@ export const Profile = () => {
       setReportMessage('')
       setSelectedItemName('')
       setReportingOrder(null)
+      loadReports() // Refresh reports list
     } catch (error) {
       addToast(error.message || 'Failed to submit report', 'error')
     }
@@ -267,6 +286,45 @@ export const Profile = () => {
               ))}
             </div>
           )}
+
+          {/* Support Tickets / Reported Issues Section */}
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              My Support Tickets
+            </h2>
+            
+            {reports.length === 0 ? (
+              <div className="bg-white rounded-xl border border-gray-200 p-6 text-center text-sm text-gray-500">
+                No support tickets filed yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reports.map(ticket => (
+                  <div key={ticket.id} className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={ticket.status === 'resolved' ? 'success' : 'warning'} className="capitalize">
+                          {ticket.status === 'resolved' ? 'Solved' : 'Pending'}
+                        </Badge>
+                        <span className="text-xs text-gray-400">{formatDate(ticket.created_at)}</span>
+                      </div>
+                      <p className="text-sm font-medium text-gray-800">
+                        Order #{ticket.order_ref?.slice(-8)} — <span className="text-primary-700 font-semibold">{ticket.data_package_info}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 italic">" {ticket.message} "</p>
+                    </div>
+                    {ticket.status === 'resolved' && (
+                      <div className="bg-green-50 border border-green-200 text-green-800 text-xs font-semibold px-3 py-1.5 rounded-lg text-center flex items-center gap-1.5 self-start sm:self-auto">
+                        <CheckCircle className="w-4 h-4 text-green-600 animate-pulse" />
+                        Solved
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
