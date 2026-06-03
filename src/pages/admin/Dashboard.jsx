@@ -37,7 +37,7 @@ export const Dashboard = () => {
     ] = await Promise.all([
       supabase.from('profiles').select('*', { count: 'exact', head: true }),
       supabase.from('orders').select('*', { count: 'exact', head: true }),
-      supabase.from('orders').select('total').eq('status', 'paid'),
+      supabase.from('orders').select('total').neq('status', 'failed'),
       supabase.from('products').select('*', { count: 'exact', head: true }),
       supabase.from('orders')
         .select('*, user:profiles(full_name, email)')
@@ -65,7 +65,14 @@ export const Dashboard = () => {
   ]
 
   const getStatusColor = (status) => {
-    const colors = { pending: 'warning', paid: 'success', failed: 'danger', delivered: 'primary' }
+    const colors = {
+      pending: 'warning',
+      processing: 'primary',
+      done: 'success',
+      paid: 'success',
+      failed: 'danger',
+      delivered: 'success',
+    }
     return colors[status] || 'default'
   }
 

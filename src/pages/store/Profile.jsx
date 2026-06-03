@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { User, Mail, Phone, ShoppingBag, Calendar, Package } from 'lucide-react'
+import { User, Mail, Phone, ShoppingBag, Calendar, Package, Trash2 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
+import { useToast } from '../../components/ui/Toast'
+import { Modal } from '../../components/ui/Modal'
+import { Button } from '../../components/ui/Button'
 import { formatCurrency, formatDate } from '../../lib/helpers'
 
 export const Profile = () => {
   const { profile, user } = useAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const { addToast } = useToast()
+
+  // Reporting state
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportingOrder, setReportingOrder] = useState(null)
+  const [selectedItemName, setSelectedItemName] = useState('')
+  const [reportMessage, setReportMessage] = useState('')
+  const [submittingReport, setSubmittingReport] = useState(false)
 
   useEffect(() => {
     if (user) loadOrders()
@@ -28,12 +39,81 @@ export const Profile = () => {
     setLoading(false)
   }
 
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to delete this order from your history?")) return
+    try {
+      const { error } = await supabase.from('orders').delete().eq('id', orderId).eq('user_id', user.id)
+      if (error) throw error
+      addToast('Order deleted from history', 'success')
+      setOrders(prev => prev.filter(o => o.id !== orderId))
+    } catch (error) {
+      addToast(error.message || 'Failed to delete order', 'error')
+    }
+  }
+
+  const handleClearAllHistory = async () => {
+    if (!window.confirm("Are you sure you want to clear your entire order history? This will delete all order records from your account.")) return
+    try {
+      const { error } = await supabase.from('orders').delete().eq('user_id', user.id)
+      if (error) throw error
+      addToast('Order history cleared', 'success')
+      setOrders([])
+    } catch (error) {
+      addToast(error.message || 'Failed to clear history', 'error')
+    }
+  }
+
+  const handleOpenReportModal = (order) => {
+    setReportingOrder(order)
+    if (order.items && order.items.length > 0) {
+      setSelectedItemName(order.items[0].name)
+    } else {
+      setSelectedItemName('')
+    }
+    setReportMessage('')
+    setShowReportModal(true)
+  }
+
+  const handleSubmitReport = async (e) => {
+    e.preventDefault()
+    if (!selectedItemName) {
+      addToast('Please select the item with the issue', 'error')
+      return
+    }
+    if (!reportMessage.trim()) {
+      addToast('Please enter a description of the issue', 'error')
+      return
+    }
+    setSubmittingReport(true)
+    try {
+      const { error } = await supabase.from('order_reports').insert({
+        user_id: user.id,
+        order_id: reportingOrder.id,
+        order_ref: reportingOrder.paystack_ref,
+        data_package_info: selectedItemName,
+        message: reportMessage,
+        status: 'pending'
+      })
+      if (error) throw error
+      addToast('Report submitted successfully! Support will contact you shortly.', 'success')
+      setShowReportModal(false)
+      setReportMessage('')
+      setSelectedItemName('')
+      setReportingOrder(null)
+    } catch (error) {
+      addToast(error.message || 'Failed to submit report', 'error')
+    }
+    setSubmittingReport(false)
+  }
+
   const getStatusColor = (status) => {
     const colors = {
       pending: 'warning',
+      processing: 'primary',
+      done: 'success',
       paid: 'success',
       failed: 'danger',
-      delivered: 'primary',
+      delivered: 'success',
     }
     return colors[status] || 'default'
   }
@@ -94,10 +174,20 @@ export const Profile = () => {
 
         {/* Orders */}
         <div className="lg:col-span-2">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-primary-600" />
-            Order History
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-primary-600" />
+              Order History
+            </h2>
+            {orders.length > 0 && (
+              <button
+                onClick={handleClearAllHistory}
+                className="text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-2.5 py-1.5 rounded-lg border border-red-200 transition-colors"
+              >
+                Clear History
+              </button>
+            )}
+          </div>
 
           {loading ? (
             <div className="space-y-4">
@@ -127,9 +217,18 @@ export const Profile = () => {
                       <p className="text-sm text-gray-500">Order #{order.paystack_ref?.slice(-8)}</p>
                       <p className="text-xs text-gray-400">{formatDate(order.created_at)}</p>
                     </div>
-                    <Badge variant={getStatusColor(order.status)}>
-                      {order.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={getStatusColor(order.status)} className="capitalize">
+                        {order.status}
+                      </Badge>
+                      <button
+                        onClick={() => handleDeleteOrder(order.id)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="Delete from history"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <div className="px-6 py-4">
                     <div className="space-y-2">
@@ -143,9 +242,19 @@ export const Profile = () => {
                         <p className="text-xs text-gray-500">+{order.items.length - 3} more items</p>
                       )}
                     </div>
-                    <div className="border-t mt-3 pt-3 flex justify-between">
-                      <span className="font-semibold text-gray-900">Total</span>
-                      <span className="font-bold text-primary-600">{formatCurrency(order.total)}</span>
+                    <div className="border-t mt-3 pt-3 flex justify-between items-center">
+                      <div>
+                        <span className="text-sm font-semibold text-gray-900">Total: </span>
+                        <span className="font-bold text-primary-600">{formatCurrency(order.total)}</span>
+                      </div>
+                      {order.status !== 'failed' && (
+                        <button
+                          onClick={() => handleOpenReportModal(order)}
+                          className="text-xs font-semibold text-primary-600 hover:text-primary-700 hover:bg-primary-50 px-2.5 py-1.5 rounded-lg border border-primary-200 transition-colors"
+                        >
+                          Report Issue
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -154,6 +263,56 @@ export const Profile = () => {
           )}
         </div>
       </div>
+
+      {/* Report Modal */}
+      <Modal isOpen={showReportModal} onClose={() => setShowReportModal(false)} title="Report Order Issue" size="md">
+        {reportingOrder && (
+          <form onSubmit={handleSubmitReport} className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-500">Order Reference</p>
+              <p className="font-mono font-semibold text-sm">{reportingOrder.paystack_ref}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Which package/product did you not receive?
+              </label>
+              <select
+                value={selectedItemName}
+                onChange={(e) => setSelectedItemName(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none bg-white text-sm"
+              >
+                {reportingOrder.items?.map((item, i) => (
+                  <option key={i} value={item.name}>{item.name} x{item.quantity}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Issue Details
+              </label>
+              <textarea
+                value={reportMessage}
+                onChange={(e) => setReportMessage(e.target.value)}
+                rows={4}
+                required
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 outline-none text-sm"
+                placeholder="E.g., I made payment but the data bundle has not been sent to my phone number (055xxxxxxx)."
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button type="button" variant="ghost" onClick={() => setShowReportModal(false)} className="flex-1">
+                Cancel
+              </Button>
+              <Button type="submit" loading={submittingReport} className="flex-1">
+                Submit Report
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   )
 }

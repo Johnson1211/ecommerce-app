@@ -74,7 +74,7 @@ export const Checkout = () => {
             items: orderItems,
             subtotal: cartTotal,
             total: cartTotal,
-            status: 'paid',
+            status: 'pending',
             paystack_ref: response.reference,
           })
 

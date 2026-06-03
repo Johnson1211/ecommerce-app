@@ -20,13 +20,14 @@ export const Settings = () => {
   }, [])
 
   const loadSettings = async () => {
-    const { data } = await supabase.from('store_settings').select('*').single()
-    if (data) {
+    const { data } = await supabase.from('store_settings').select('*').limit(1)
+    if (data && data.length > 0) {
+      const row = data[0]
       setSettings({
-        storeName: data.store_name || 'BIG-BENZ SHOP',
-        logoUrl: data.logo_url || '',
-        contactEmail: data.contact_email || '',
-        paystackPublicKey: data.paystack_public_key || '',
+        storeName: row.store_name || 'BIG-BENZ SHOP',
+        logoUrl: row.logo_url || '',
+        contactEmail: row.contact_email || '',
+        paystackPublicKey: row.paystack_public_key || '',
       })
     }
   }
@@ -35,16 +36,28 @@ export const Settings = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      const { error } = await supabase.from('store_settings').update({
+      const { data: existing } = await supabase.from('store_settings').select('id').limit(1)
+      
+      const payload = {
         store_name: settings.storeName,
         logo_url: settings.logoUrl,
         contact_email: settings.contactEmail,
         paystack_public_key: settings.paystackPublicKey,
         updated_at: new Date().toISOString(),
-      }).eq('id', (await supabase.from('store_settings').select('id').single()).data.id)
+      }
+
+      let error
+      if (existing && existing.length > 0) {
+        const result = await supabase.from('store_settings').update(payload).eq('id', existing[0].id)
+        error = result.error
+      } else {
+        const result = await supabase.from('store_settings').insert(payload)
+        error = result.error
+      }
 
       if (error) throw error
       addToast('Settings saved', 'success')
+      loadSettings()
     } catch (error) {
       addToast(error.message || 'Failed to save', 'error')
     }

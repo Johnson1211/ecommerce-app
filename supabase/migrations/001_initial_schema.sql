@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS orders (
   items JSONB NOT NULL DEFAULT '[]',
   subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
   total NUMERIC(10,2) NOT NULL DEFAULT 0,
-  status TEXT CHECK (status IN ('pending', 'paid', 'failed', 'delivered')) DEFAULT 'pending',
+  status TEXT CHECK (status IN ('pending', 'processing', 'done', 'failed', 'paid', 'delivered')) DEFAULT 'pending',
   paystack_ref TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -174,6 +174,9 @@ CREATE POLICY "Admins can update all orders" ON orders
 
 CREATE POLICY "Admins can delete orders" ON orders
   FOR DELETE USING (public.is_admin());
+
+CREATE POLICY "Users can delete own orders" ON orders
+  FOR DELETE USING (user_id = auth.uid());
 
 -- Cart RLS
 ALTER TABLE cart ENABLE ROW LEVEL SECURITY;
@@ -301,3 +304,29 @@ CREATE POLICY "Select digital-files if paid" ON storage.objects
         )
     )
   );
+
+-- ============================================
+-- ORDER REPORTS TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS order_reports (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  order_id UUID REFERENCES orders(id) ON DELETE CASCADE,
+  order_ref TEXT NOT NULL,
+  data_package_info TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'resolved')) DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE order_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can create own reports" ON order_reports
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view own reports" ON order_reports
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Admins can manage all reports" ON order_reports
+  FOR ALL USING (public.is_admin());
+

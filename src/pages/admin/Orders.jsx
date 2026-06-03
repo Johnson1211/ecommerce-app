@@ -9,7 +9,7 @@ import { Skeleton } from '../../components/ui/Skeleton'
 import { useToast } from '../../components/ui/Toast'
 import { formatCurrency, formatDate } from '../../lib/helpers'
 
-const statusOptions = ['pending', 'paid', 'failed', 'delivered']
+const statusOptions = ['pending', 'processing', 'done', 'failed', 'paid', 'delivered']
 
 export const Orders = () => {
   const [orders, setOrders] = useState([])
@@ -61,7 +61,14 @@ export const Orders = () => {
   }
 
   const getStatusColor = (status) => {
-    const colors = { pending: 'warning', paid: 'success', failed: 'danger', delivered: 'primary' }
+    const colors = {
+      pending: 'warning',
+      processing: 'primary',
+      done: 'success',
+      paid: 'success',
+      failed: 'danger',
+      delivered: 'success',
+    }
     return colors[status] || 'default'
   }
 
@@ -185,7 +192,7 @@ export const Orders = () => {
                 <p className="text-sm text-gray-600">Subtotal: {formatCurrency(selectedOrder.subtotal)}</p>
                 <p className="text-xl font-bold text-primary-600">Total: {formatCurrency(selectedOrder.total)}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 justify-end">
                 {statusOptions.filter(s => s !== selectedOrder.status).map(s => (
                   <Button key={s} size="sm" variant="outline" onClick={() => handleUpdateStatus(selectedOrder.id, s)}>
                     Mark {s}
