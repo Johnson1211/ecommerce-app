@@ -37,6 +37,7 @@ export const Profile = () => {
       .from('orders')
       .select('*')
       .eq('user_id', user.id)
+      .eq('user_hidden', false)
       .order('created_at', { ascending: false })
 
     if (data) setOrders(data)
@@ -60,7 +61,7 @@ export const Profile = () => {
   const handleDeleteOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to delete this order from your history?")) return
     try {
-      const { error } = await supabase.from('orders').delete().eq('id', orderId).eq('user_id', user.id)
+      const { error } = await supabase.from('orders').update({ user_hidden: true }).eq('id', orderId).eq('user_id', user.id)
       if (error) throw error
       addToast('Order deleted from history', 'success')
       setOrders(prev => prev.filter(o => o.id !== orderId))
@@ -72,7 +73,7 @@ export const Profile = () => {
   const handleClearAllHistory = async () => {
     if (!window.confirm("Are you sure you want to clear your entire order history? This will delete all order records from your account.")) return
     try {
-      const { error } = await supabase.from('orders').delete().eq('user_id', user.id)
+      const { error } = await supabase.from('orders').update({ user_hidden: true }).eq('user_id', user.id)
       if (error) throw error
       addToast('Order history cleared', 'success')
       setOrders([])

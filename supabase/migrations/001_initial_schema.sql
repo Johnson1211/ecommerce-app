@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
   phone TEXT,
+  user_hidden BOOLEAN DEFAULT false,
   items JSONB NOT NULL DEFAULT '[]',
   subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
   total NUMERIC(10,2) NOT NULL DEFAULT 0,
@@ -173,6 +174,9 @@ CREATE POLICY "Users can read own orders" ON orders
 
 CREATE POLICY "Users can insert own orders" ON orders
   FOR INSERT WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own orders" ON orders
+  FOR UPDATE USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
 CREATE POLICY "Admins can read all orders" ON orders
   FOR SELECT USING (public.is_admin());
