@@ -18,6 +18,25 @@ export const OrderConfirmation = () => {
     if (reference) loadOrder()
   }, [reference])
 
+  const loadOrder = async () => {
+    setLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('paystack_ref', reference)
+        .single()
+
+      if (error) throw error
+      if (data) setOrder(data)
+    } catch (err) {
+      console.error('Failed to load order:', err)
+      addToast('Failed to load order details.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleDownload = async (fileUrl, fileName) => {
     try {
       addToast('Generating secure download link...', 'loading', 0)
@@ -58,6 +77,18 @@ export const OrderConfirmation = () => {
     }
   }
 
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: 'warning',
+      processing: 'primary',
+      done: 'success',
+      paid: 'success',
+      failed: 'danger',
+      delivered: 'success',
+    }
+    return colors[status] || 'default'
+  }
+
   const hasDigitalItems = order?.items?.some(item => item.file_url || item.metadata?.network)
 
   if (loading) {
@@ -90,8 +121,8 @@ export const OrderConfirmation = () => {
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <CheckCircle className="w-10 h-10 text-green-600" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h1>
-        <p className="text-gray-600">Thank you for your purchase. Your order has been confirmed.</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Submitted!</h1>
+        <p className="text-gray-600">Your order has been received and is awaiting payment verification.</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-6">
@@ -101,7 +132,9 @@ export const OrderConfirmation = () => {
               <p className="text-sm text-gray-500">Order Reference</p>
               <p className="font-mono font-semibold text-gray-900">{order.paystack_ref}</p>
             </div>
-            <Badge variant="success">Paid</Badge>
+            <Badge variant={getStatusColor(order.status)} className="capitalize">
+              {order.status}
+            </Badge>
           </div>
         </div>
 
@@ -124,7 +157,7 @@ export const OrderConfirmation = () => {
                       {item.metadata.network} — {item.metadata.size_gb}GB
                     </p>
                   )}
-                  {item.file_url && (
+                  {item.file_url && order.status === 'done' && (
                     <button
                       onClick={() => handleDownload(item.file_url, item.name)}
                       className="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 mt-1 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
@@ -132,6 +165,11 @@ export const OrderConfirmation = () => {
                       <Download className="w-3 h-3" />
                       Download File
                     </button>
+                  )}
+                  {item.file_url && order.status !== 'done' && (
+                    <p className="text-xs text-amber-600 mt-1 italic">
+                      Download will be available once payment is verified.
+                    </p>
                   )}
                 </div>
                 <span className="font-semibold text-gray-900">
@@ -164,7 +202,7 @@ export const OrderConfirmation = () => {
         <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-6">
           <h3 className="font-semibold text-primary-800 mb-2">Digital Delivery</h3>
           <p className="text-sm text-primary-700">
-            Your digital products and data bundles are ready. Download links are available above. 
+            Once payment is verified, your digital download links will be enabled above. 
             For data bundles, you'll receive delivery via the phone number provided during checkout.
           </p>
         </div>
