@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Zap, Shield, Truck, Headphones } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 import { ProductCard } from '../../components/store/ProductCard'
 import { ProductSkeleton } from '../../components/ui/Skeleton'
 import { Button } from '../../components/ui/Button'
 
 export const Home = () => {
+  const { user } = useAuth()
   const [featuredProducts, setFeaturedProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -60,6 +62,24 @@ export const Home = () => {
                 </Button>
               </Link>
             </div>
+
+            {!user && (
+              <div className="md:hidden mt-6 pt-6 border-t border-white/20 flex flex-col gap-3">
+                <p className="text-sm text-primary-100">Access your account, track orders & history:</p>
+                <div className="flex gap-3">
+                  <Link to="/login" className="flex-1">
+                    <Button size="default" variant="secondary" className="w-full bg-white text-primary-700 hover:bg-gray-100">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/register" className="flex-1">
+                    <Button size="default" variant="outline" className="w-full border-white text-white hover:bg-white/10">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
