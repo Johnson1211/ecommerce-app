@@ -142,7 +142,7 @@ export const Settings = () => {
                       value={settings.momoName}
                       onChange={(e) => setSettings(p => ({ ...p, momoName: e.target.value }))}
                       className={inputClass}
-                      placeholder="Benjamin Ofori Boateng"
+                      placeholder="Joyce Marfo"
                     />
                   </div>
                 </div>

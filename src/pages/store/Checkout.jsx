@@ -265,7 +265,7 @@ export const Checkout = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-primary-700">Account Name:</span>
-                  <span>{merchantMomo.name || 'Benjamin Ofori Boateng'}</span>
+                  <span>{merchantMomo.name || 'Joyce Marfo'}</span>
                 </div>
               </div>
               <p className="text-xs text-primary-700 mt-4 leading-relaxed font-normal">
