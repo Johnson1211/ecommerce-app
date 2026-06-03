@@ -20,6 +20,15 @@ serve(async (req) => {
   }
 
   try {
+    const url = new URL(req.url)
+    const secret = url.searchParams.get("secret")
+    const expectedSecret = Deno.env.get("MOMO_VERIFY_SECRET")
+
+    if (expectedSecret && secret !== expectedSecret) {
+      console.warn("Unauthorized request attempt: secret mismatch.")
+      return new Response("Unauthorized", { status: 401, headers: corsHeaders })
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
