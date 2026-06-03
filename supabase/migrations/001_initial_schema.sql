@@ -67,6 +67,10 @@ CREATE TABLE IF NOT EXISTS orders (
   total NUMERIC(10,2) NOT NULL DEFAULT 0,
   status TEXT CHECK (status IN ('pending', 'processing', 'done', 'failed', 'paid', 'delivered')) DEFAULT 'pending',
   paystack_ref TEXT,
+  momo_transaction_id TEXT,
+  momo_number TEXT,
+  momo_network TEXT,
+  momo_sender_name TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -91,6 +95,9 @@ CREATE TABLE IF NOT EXISTS store_settings (
   logo_url TEXT,
   contact_email TEXT,
   paystack_public_key TEXT,
+  momo_number TEXT,
+  momo_network TEXT,
+  momo_name TEXT,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

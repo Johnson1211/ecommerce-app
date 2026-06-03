@@ -11,6 +11,9 @@ export const Settings = () => {
     logoUrl: '',
     contactEmail: '',
     paystackPublicKey: '',
+    momoNumber: '',
+    momoNetwork: 'MTN',
+    momoName: '',
   })
   const [loading, setLoading] = useState(false)
   const { addToast } = useToast()
@@ -28,6 +31,9 @@ export const Settings = () => {
         logoUrl: row.logo_url || '',
         contactEmail: row.contact_email || '',
         paystackPublicKey: row.paystack_public_key || '',
+        momoNumber: row.momo_number || '',
+        momoNetwork: row.momo_network || 'MTN',
+        momoName: row.momo_name || '',
       })
     }
   }
@@ -43,6 +49,9 @@ export const Settings = () => {
         logo_url: settings.logoUrl,
         contact_email: settings.contactEmail,
         paystack_public_key: settings.paystackPublicKey,
+        momo_number: settings.momoNumber,
+        momo_network: settings.momoNetwork,
+        momo_name: settings.momoName,
         updated_at: new Date().toISOString(),
       }
 
@@ -98,13 +107,45 @@ export const Settings = () => {
                 </label>
                 <input type="email" value={settings.contactEmail} onChange={(e) => setSettings(p => ({ ...p, contactEmail: e.target.value }))} className={inputClass} placeholder="support@store.com" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4" />
-                  Paystack Public Key
-                </label>
-                <input type="text" value={settings.paystackPublicKey} onChange={(e) => setSettings(p => ({ ...p, paystackPublicKey: e.target.value }))} className={inputClass} placeholder="pk_test_..." />
-                <p className="text-xs text-gray-500 mt-1.5">This is also set in your .env file as VITE_PAYSTACK_PUBLIC_KEY</p>
+              <div className="border-t pt-5 mt-5">
+                <h3 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-primary-600" />
+                  Direct MoMo Payments Configuration
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">MoMo Network</label>
+                    <select
+                      value={settings.momoNetwork}
+                      onChange={(e) => setSettings(p => ({ ...p, momoNetwork: e.target.value }))}
+                      className={inputClass}
+                    >
+                      <option value="MTN">MTN MoMo</option>
+                      <option value="Telecel">Telecel Cash</option>
+                      <option value="AirtelTigo">AirtelTigo Money</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">MoMo Number</label>
+                    <input
+                      type="text"
+                      value={settings.momoNumber}
+                      onChange={(e) => setSettings(p => ({ ...p, momoNumber: e.target.value }))}
+                      className={inputClass}
+                      placeholder="0558802783"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">MoMo Account Name</label>
+                    <input
+                      type="text"
+                      value={settings.momoName}
+                      onChange={(e) => setSettings(p => ({ ...p, momoName: e.target.value }))}
+                      className={inputClass}
+                      placeholder="Benjamin Ofori Boateng"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="pt-2">
                 <Button type="submit" loading={loading} className="w-full sm:w-auto">

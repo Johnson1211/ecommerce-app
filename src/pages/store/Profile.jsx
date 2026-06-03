@@ -242,6 +242,12 @@ export const Profile = () => {
                         <p className="text-xs text-gray-500">+{order.items.length - 3} more items</p>
                       )}
                     </div>
+                    {order.momo_transaction_id && (
+                      <div className="mt-2 pt-2 border-t border-dashed border-gray-100 flex items-center justify-between text-xs text-gray-500">
+                        <span>MoMo Transaction: ({order.momo_network})</span>
+                        <span className="font-mono font-semibold bg-gray-50 px-2 py-0.5 rounded border border-gray-100">{order.momo_transaction_id}</span>
+                      </div>
+                    )}
                     <div className="border-t mt-3 pt-3 flex justify-between items-center">
                       <div>
                         <span className="text-sm font-semibold text-gray-900">Total: </span>

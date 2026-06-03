@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { CreditCard, MapPin, Phone, Mail, ArrowLeft, Lock } from 'lucide-react'
+import { MapPin, Phone, Mail, ArrowLeft, Lock, CreditCard } from 'lucide-react'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
 import { Button } from '../../components/ui/Button'
 import { useToast } from '../../components/ui/Toast'
-import { initializePayment, generateReference } from '../../lib/paystack'
+import { generateReference } from '../../lib/paystack'
 import { supabase } from '../../lib/supabase'
 import { formatCurrency } from '../../lib/helpers'
 
@@ -30,110 +30,127 @@ export const Checkout = () => {
     city: '',
   })
 
+  // Merchant MoMo state
+  const [merchantMomo, setMerchantMomo] = useState({
+    number: '',
+    network: 'MTN',
+    name: ''
+  })
+
+  // Customer MoMo input state
+  const [momoDetails, setMomoDetails] = useState({
+    network: 'MTN',
+    number: '',
+    senderName: '',
+    transactionId: ''
+  })
+
+  useEffect(() => {
+    loadMerchantMomo()
+  }, [])
+
+  const loadMerchantMomo = async () => {
+    try {
+      const { data } = await supabase.from('store_settings').select('momo_number, momo_network, momo_name').limit(1)
+      if (data && data.length > 0) {
+        setMerchantMomo({
+          number: data[0].momo_number || '',
+          network: data[0].momo_network || 'MTN',
+          name: data[0].momo_name || ''
+        })
+      }
+    } catch (err) {
+      console.error('Failed to load merchant MoMo settings:', err)
+    }
+  }
+
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
-  const handlePayment = async () => {
+  const handleSubmitOrder = async () => {
     if (!formData.fullName || !formData.email || !formData.phone) {
       addToast('Please fill in all required fields', 'error')
       return
     }
 
+    if (!momoDetails.number || !momoDetails.senderName || !momoDetails.transactionId) {
+      addToast('Please complete step 2 by entering your MoMo payment details', 'error')
+      return
+    }
+
     setLoading(true)
-    addToast('Initializing payment...', 'loading', 0)
+    addToast('Submitting your order...', 'loading', 0)
 
     const reference = generateReference()
 
     try {
-      const response = await initializePayment({
-        email: formData.email,
-        amount: cartTotal,
-        reference,
-        metadata: {
-          custom_fields: [
-            { display_name: 'Full Name', variable_name: 'full_name', value: formData.fullName },
-            { display_name: 'Phone', variable_name: 'phone', value: formData.phone },
-            { display_name: 'Address', variable_name: 'address', value: formData.address },
-          ]
-        },
-        onSuccess: async (response) => {
-          // Save order to Supabase
-          const orderItems = cartItems.map(item => ({
-            product_id: item.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            image_url: item.image_url,
-            file_url: item.file_url,
-            metadata: item.metadata,
-          }))
+      const orderItems = cartItems.map(item => ({
+        product_id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image_url: item.image_url,
+        file_url: item.file_url,
+        metadata: item.metadata,
+      }))
 
-          const { error } = await supabase.from('orders').insert({
-            user_id: user.id,
-            items: orderItems,
-            subtotal: cartTotal,
-            total: cartTotal,
-            status: 'pending',
-            paystack_ref: response.reference,
-          })
-
-          if (error) {
-            console.error('Order save error:', error)
-            addToast('Payment successful but order save failed. Contact support.', 'error')
-            return
-          }
-
-          if (!directBuyItem) {
-            await clearCart()
-          }
-
-          // ----------------------------------------------------
-          // Email Notifications (Runs in background)
-          // ----------------------------------------------------
-
-          try {
-            const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
-            const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
-            const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
-            const ownerEmail = import.meta.env.VITE_OWNER_EMAIL
-            const itemsText = cartItems.map(item => `${item.name} x${item.quantity} (${formatCurrency(item.price * item.quantity)})`).join('\n')
-
-            if (serviceId && templateId && publicKey && ownerEmail) {
-              fetch('https://api.emailjs.com/api/v1.0/email/send', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  service_id: serviceId,
-                  template_id: templateId,
-                  user_id: publicKey,
-                  template_params: {
-                    to_email: ownerEmail,
-                    order_ref: response.reference,
-                    customer_name: formData.fullName,
-                    customer_email: formData.email,
-                    customer_phone: formData.phone,
-                    order_details: itemsText,
-                    total_amount: formatCurrency(cartTotal)
-                  }
-                })
-              }).catch(emailErr => console.error('Email send fail:', emailErr))
-            }
-          } catch (emailError) {
-            console.error('Email preparation error:', emailError)
-          }
-          // ----------------------------------------------------
-
-          addToast('Payment successful!', 'success')
-          navigate(`/order-confirmation?ref=${response.reference}`)
-        },
-        onClose: () => {
-          addToast('Payment cancelled', 'warning')
-          setLoading(false)
-        },
+      const { error } = await supabase.from('orders').insert({
+        user_id: user.id,
+        items: orderItems,
+        subtotal: cartTotal,
+        total: cartTotal,
+        status: 'pending',
+        paystack_ref: reference,
+        momo_transaction_id: momoDetails.transactionId.trim(),
+        momo_number: momoDetails.number.trim(),
+        momo_network: momoDetails.network,
+        momo_sender_name: momoDetails.senderName.trim()
       })
+
+      if (error) throw error
+
+      if (!directBuyItem) {
+        await clearCart()
+      }
+
+      // Email notifications to owner
+      try {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+        const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        const ownerEmail = import.meta.env.VITE_OWNER_EMAIL
+        const itemsText = cartItems.map(item => `${item.name} x${item.quantity} (${formatCurrency(item.price * item.quantity)})`).join('\n')
+
+        if (serviceId && templateId && publicKey && ownerEmail) {
+          fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_id: serviceId,
+              template_id: templateId,
+              user_id: publicKey,
+              template_params: {
+                to_email: ownerEmail,
+                order_ref: reference,
+                customer_name: formData.fullName,
+                customer_email: formData.email,
+                customer_phone: formData.phone,
+                order_details: `${itemsText}\n\nIncoming MoMo Payment Details:\nNetwork: ${momoDetails.network}\nNumber: ${momoDetails.number}\nSender Name: ${momoDetails.senderName}\nTransaction ID: ${momoDetails.transactionId}`,
+                total_amount: formatCurrency(cartTotal)
+              }
+            })
+          }).catch(emailErr => console.error('Email send fail:', emailErr))
+        }
+      } catch (emailError) {
+        console.error('Email preparation error:', emailError)
+      }
+
+      addToast('Order submitted! Awaiting payment verification.', 'success')
+      navigate(`/order-confirmation?ref=${reference}`)
     } catch (error) {
-      addToast(error.message || 'Payment failed', 'error')
+      addToast(error.message || 'Failed to submit order', 'error')
+    } finally {
       setLoading(false)
     }
   }
@@ -167,17 +184,18 @@ export const Checkout = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Contact Details */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-primary-600" />
-              Contact & Delivery Info
+              Contact Info
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name *</label>
                 <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
                     name="fullName"
@@ -185,7 +203,7 @@ export const Checkout = () => {
                     value={formData.fullName}
                     onChange={handleChange}
                     className={inputClass}
-                    placeholder="John Doe"
+                    placeholder="Kwame Boateng"
                   />
                 </div>
               </div>
@@ -221,43 +239,101 @@ export const Checkout = () => {
                   />
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Delivery Address</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className={inputClass}
-                    placeholder="123 Street Name, Area"
-                  />
+          {/* MoMo Send Instruction */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">1</span>
+              Send Payment Manually
+            </h2>
+            <div className="bg-primary-50 rounded-lg p-5 border border-primary-100 text-primary-950">
+              <p className="text-sm font-medium mb-3">Please transfer exactly <span className="text-lg font-bold text-primary-700">{formatCurrency(cartTotal)}</span> to the MoMo account below:</p>
+              <div className="space-y-2.5 text-sm font-semibold">
+                <div className="flex justify-between border-b border-primary-100/50 pb-1.5">
+                  <span className="text-primary-700">Network:</span>
+                  <span>{merchantMomo.network || 'MTN'}</span>
                 </div>
+                <div className="flex justify-between border-b border-primary-100/50 pb-1.5">
+                  <span className="text-primary-700">Number:</span>
+                  <span className="text-base text-primary-900 font-bold">{merchantMomo.number || '0558802783'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-primary-700">Account Name:</span>
+                  <span>{merchantMomo.name || 'Benjamin Ofori Boateng'}</span>
+                </div>
+              </div>
+              <p className="text-xs text-primary-700 mt-4 leading-relaxed font-normal">
+                * Complete the transfer using your phone, copy the **Transaction ID** from your receipt, and fill in the details below.
+              </p>
+            </div>
+          </div>
+
+          {/* MoMo Submission Form */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">2</span>
+              Enter Your Payment Receipt Details
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Your MoMo Network *</label>
+                <select
+                  value={momoDetails.network}
+                  onChange={(e) => setMomoDetails(prev => ({ ...prev, network: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none bg-white text-sm"
+                >
+                  <option value="MTN">MTN MoMo</option>
+                  <option value="Telecel">Telecel Cash</option>
+                  <option value="AirtelTigo">AirtelTigo Money</option>
+                </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">City</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Your MoMo Number *</label>
+                <input
+                  type="tel"
+                  required
+                  value={momoDetails.number}
+                  onChange={(e) => setMomoDetails(prev => ({ ...prev, number: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
+                  placeholder="0551234567"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Sender Name (On MoMo Account) *</label>
                 <input
                   type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className={inputClass.replace('pl-10', 'pl-4')}
-                  placeholder="Accra"
+                  required
+                  value={momoDetails.senderName}
+                  onChange={(e) => setMomoDetails(prev => ({ ...prev, senderName: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
+                  placeholder="e.g., Kwame Boateng"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">MoMo Transaction ID *</label>
+                <input
+                  type="text"
+                  required
+                  value={momoDetails.transactionId}
+                  onChange={(e) => setMomoDetails(prev => ({ ...prev, transactionId: e.target.value }))}
+                  className="w-full px-4 py-2.5 rounded-lg border border-primary-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm font-semibold"
+                  placeholder="e.g., 28394850384"
                 />
               </div>
             </div>
           </div>
 
-          {/* Paystack Notice */}
           <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3">
             <Lock className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-primary-800">Secure Payment</p>
+              <p className="text-sm font-medium text-primary-800">Verification Pending</p>
               <p className="text-sm text-primary-700 mt-1">
-                Your payment is processed securely by Paystack. We do not store your card details.
+                Your order is processed manually. Once you submit, the merchant will verify the Transaction ID against their statement and fulfill the order.
               </p>
             </div>
           </div>
@@ -300,16 +376,12 @@ export const Checkout = () => {
             <Button
               className="w-full mt-6"
               size="lg"
-              onClick={handlePayment}
+              onClick={handleSubmitOrder}
               loading={loading}
             >
               <CreditCard className="w-5 h-5 mr-2" />
-              Pay with Paystack
+              Submit Order
             </Button>
-
-            <p className="text-xs text-gray-500 text-center mt-3">
-              You'll be redirected to Paystack to complete your payment
-            </p>
           </div>
         </div>
       </div>

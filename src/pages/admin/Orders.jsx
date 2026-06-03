@@ -156,7 +156,7 @@ export const Orders = () => {
               <Badge variant={getStatusColor(selectedOrder.status)} className="capitalize text-sm">{selectedOrder.status}</Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+             <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
               <div>
                 <p className="text-xs text-gray-500 uppercase">Customer</p>
                 <p className="font-medium">{selectedOrder.user?.full_name}</p>
@@ -168,6 +168,29 @@ export const Orders = () => {
                 <p className="font-medium">{formatDate(selectedOrder.created_at)}</p>
               </div>
             </div>
+
+            {selectedOrder.momo_transaction_id && (
+              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 text-sm text-primary-950">
+                <h4 className="font-semibold mb-2 flex items-center gap-1.5">
+                  <CreditCard className="w-4 h-4 text-primary-600" />
+                  Direct MoMo Payment Verification
+                </h4>
+                <div className="grid grid-cols-2 gap-y-2 gap-x-4 text-xs">
+                  <div>
+                    <span className="font-medium text-primary-700">MoMo Network:</span> {selectedOrder.momo_network}
+                  </div>
+                  <div>
+                    <span className="font-medium text-primary-700">Transaction ID:</span> <span className="font-mono font-bold select-all bg-white px-1.5 py-0.5 border border-primary-200 rounded">{selectedOrder.momo_transaction_id}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-primary-700">Sender Phone:</span> {selectedOrder.momo_number}
+                  </div>
+                  <div>
+                    <span className="font-medium text-primary-700">Sender Name:</span> {selectedOrder.momo_sender_name}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <h4 className="font-semibold text-gray-900 mb-3">Items</h4>
@@ -193,7 +216,12 @@ export const Orders = () => {
                 <p className="text-xl font-bold text-primary-600">Total: {formatCurrency(selectedOrder.total)}</p>
               </div>
               <div className="flex flex-wrap gap-2 justify-end">
-                {statusOptions.filter(s => s !== selectedOrder.status).map(s => (
+                {selectedOrder.status === 'pending' && selectedOrder.momo_transaction_id && (
+                  <Button size="sm" variant="primary" onClick={() => handleUpdateStatus(selectedOrder.id, 'processing')}>
+                    Approve Payment (Start Processing)
+                  </Button>
+                )}
+                {statusOptions.filter(s => s !== selectedOrder.status && s !== 'paid' && s !== 'delivered').map(s => (
                   <Button key={s} size="sm" variant="outline" onClick={() => handleUpdateStatus(selectedOrder.id, s)}>
                     Mark {s}
                   </Button>
