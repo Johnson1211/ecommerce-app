@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS data_packages (
 CREATE TABLE IF NOT EXISTS orders (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  phone TEXT,
   items JSONB NOT NULL DEFAULT '[]',
   subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
   total NUMERIC(10,2) NOT NULL DEFAULT 0,

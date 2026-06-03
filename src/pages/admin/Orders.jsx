@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Eye, Trash2, AlertTriangle, Package, ChevronDown } from 'lucide-react'
+import { Eye, Trash2, AlertTriangle, Package, ChevronDown, CheckCircle, CreditCard, Copy } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -20,6 +20,12 @@ export const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [deleteOrder, setDeleteOrder] = useState(null)
   const { addToast } = useToast()
+
+  const copyToClipboard = (text, label = 'Number') => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    addToast(`${label} copied to clipboard`, 'success')
+  }
 
   useEffect(() => { loadOrders() }, [statusFilter])
 
@@ -111,6 +117,32 @@ export const Orders = () => {
                       <td className="py-4 px-6">
                         <p className="font-medium text-sm text-gray-900">{order.user?.full_name || 'Unknown'}</p>
                         <p className="text-xs text-gray-500">{order.user?.email}</p>
+                        <div className="flex flex-col gap-1 mt-1">
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="text-gray-500">Contact:</span>
+                            <span 
+                              onClick={() => copyToClipboard(order.phone || order.user?.phone || '', 'Contact phone')}
+                              className="font-mono bg-gray-100 hover:bg-gray-200 text-gray-800 px-1.5 py-0.5 rounded cursor-pointer transition-colors inline-flex items-center gap-0.5 text-[10px]"
+                              title="Click to copy contact phone"
+                            >
+                              {order.phone || order.user?.phone || '—'}
+                              <Copy className="w-2.5 h-2.5 text-gray-400" />
+                            </span>
+                          </div>
+                          {order.momo_transaction_id && (
+                            <div className="flex items-center gap-1 text-xs">
+                              <span className="text-primary-600 font-medium">MoMo TXID:</span>
+                              <span 
+                                onClick={() => copyToClipboard(order.momo_transaction_id, 'Transaction ID')}
+                                className="font-mono font-semibold bg-primary-50 hover:bg-primary-100 text-primary-700 px-1.5 py-0.5 rounded cursor-pointer transition-colors border border-primary-100 inline-flex items-center gap-0.5 text-[10px]"
+                                title="Click to copy Transaction ID"
+                              >
+                                {order.momo_transaction_id}
+                                <Copy className="w-2.5 h-2.5 text-primary-400" />
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-gray-600">{order.items?.length || 0} items</td>
                       <td className="py-4 px-6 font-medium text-sm text-gray-900">{formatCurrency(order.total)}</td>
@@ -124,7 +156,16 @@ export const Orders = () => {
                         </div>
                       </td>
                       <td className="py-4 px-6 text-sm text-gray-500">{formatDate(order.created_at)}</td>
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-4 px-6 text-right whitespace-nowrap">
+                        {order.status === 'pending' && order.momo_transaction_id && (
+                          <button 
+                            onClick={() => handleUpdateStatus(order.id, 'processing')} 
+                            className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors mr-1"
+                            title="Approve MoMo Payment"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                        )}
                         <button onClick={() => { setSelectedOrder(order); setShowDetailModal(true) }} className="p-2 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors mr-1">
                           <Eye className="w-4 h-4" />
                         </button>
@@ -159,9 +200,19 @@ export const Orders = () => {
              <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
               <div>
                 <p className="text-xs text-gray-500 uppercase">Customer</p>
-                <p className="font-medium">{selectedOrder.user?.full_name}</p>
+                <p className="font-medium">{selectedOrder.user?.full_name || 'Unknown'}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.user?.email}</p>
-                <p className="text-sm text-gray-600">{selectedOrder.user?.phone}</p>
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <span className="text-xs text-gray-500">Contact:</span>
+                  <span 
+                    onClick={() => copyToClipboard(selectedOrder.phone || selectedOrder.user?.phone || '', 'Contact phone')}
+                    className="font-mono text-sm bg-white hover:bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded cursor-pointer inline-flex items-center gap-1 transition-all text-gray-900"
+                    title="Click to copy contact phone"
+                  >
+                    {selectedOrder.phone || selectedOrder.user?.phone || '—'}
+                    <Copy className="w-3.5 h-3.5 text-gray-400" />
+                  </span>
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-500 uppercase">Date</p>
@@ -180,10 +231,26 @@ export const Orders = () => {
                     <span className="font-medium text-primary-700">MoMo Network:</span> {selectedOrder.momo_network}
                   </div>
                   <div>
-                    <span className="font-medium text-primary-700">Transaction ID:</span> <span className="font-mono font-bold select-all bg-white px-1.5 py-0.5 border border-primary-200 rounded">{selectedOrder.momo_transaction_id}</span>
+                    <span className="font-medium text-primary-700">Transaction ID:</span>{' '}
+                    <span 
+                      onClick={() => copyToClipboard(selectedOrder.momo_transaction_id, 'Transaction ID')}
+                      className="font-mono font-bold bg-white hover:bg-gray-100 px-1.5 py-0.5 border border-primary-200 rounded cursor-pointer inline-flex items-center gap-1 transition-all text-primary-950"
+                      title="Click to copy Transaction ID"
+                    >
+                      {selectedOrder.momo_transaction_id}
+                      <Copy className="w-3 h-3 text-gray-400" />
+                    </span>
                   </div>
                   <div>
-                    <span className="font-medium text-primary-700">Sender Phone:</span> {selectedOrder.momo_number}
+                    <span className="font-medium text-primary-700">Sender Phone:</span>{' '}
+                    <span 
+                      onClick={() => copyToClipboard(selectedOrder.momo_number, 'Sender Phone')}
+                      className="font-mono bg-white hover:bg-gray-100 px-1.5 py-0.5 border border-gray-200 rounded cursor-pointer inline-flex items-center gap-1 transition-all text-primary-950"
+                      title="Click to copy sender phone"
+                    >
+                      {selectedOrder.momo_number || '—'}
+                      <Copy className="w-3 h-3 text-gray-400" />
+                    </span>
                   </div>
                   <div>
                     <span className="font-medium text-primary-700">Sender Name:</span> {selectedOrder.momo_sender_name}

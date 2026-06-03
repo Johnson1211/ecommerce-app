@@ -25,7 +25,7 @@ export const Checkout = () => {
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
     email: profile?.email || user?.email || '',
-    phone: profile?.phone || '',
+    phone: '',
     address: '',
     city: '',
   })
@@ -65,7 +65,8 @@ export const Checkout = () => {
   }
 
   const handleChange = (e) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const value = e.target.name === 'phone' ? e.target.value.replace(/\D/g, '') : e.target.value
+    setFormData(prev => ({ ...prev, [e.target.name]: value }))
   }
 
   const handleSubmitOrder = async () => {
@@ -97,6 +98,7 @@ export const Checkout = () => {
 
       const { error } = await supabase.from('orders').insert({
         user_id: user.id,
+        phone: formData.phone.trim(),
         items: orderItems,
         subtotal: cartTotal,
         total: cartTotal,
@@ -232,10 +234,12 @@ export const Checkout = () => {
                     type="tel"
                     name="phone"
                     required
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     value={formData.phone}
                     onChange={handleChange}
                     className={inputClass}
-                    placeholder="+233 20 123 4567"
+                    placeholder="e.g., 0551234567"
                   />
                 </div>
               </div>
@@ -295,10 +299,12 @@ export const Checkout = () => {
                 <input
                   type="tel"
                   required
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={momoDetails.number}
-                  onChange={(e) => setMomoDetails(prev => ({ ...prev, number: e.target.value }))}
+                  onChange={(e) => setMomoDetails(prev => ({ ...prev, number: e.target.value.replace(/\D/g, '') }))}
                   className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none text-sm"
-                  placeholder="0551234567"
+                  placeholder="e.g., 0551234567"
                 />
               </div>
 
