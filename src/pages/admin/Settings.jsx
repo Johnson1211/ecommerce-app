@@ -7,7 +7,7 @@ import { useToast } from '../../components/ui/Toast'
 
 export const Settings = () => {
   const [settings, setSettings] = useState({
-    storeName: 'TechStore',
+    storeName: 'BIG-BENZ SHOP',
     logoUrl: '',
     contactEmail: '',
     paystackPublicKey: '',
@@ -23,7 +23,7 @@ export const Settings = () => {
     const { data } = await supabase.from('store_settings').select('*').single()
     if (data) {
       setSettings({
-        storeName: data.store_name || 'TechStore',
+        storeName: data.store_name || 'BIG-BENZ SHOP',
         logoUrl: data.logo_url || '',
         contactEmail: data.contact_email || '',
         paystackPublicKey: data.paystack_public_key || '',

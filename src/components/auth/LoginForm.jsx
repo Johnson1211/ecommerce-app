@@ -34,7 +34,7 @@ export const LoginForm = () => {
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-        <p className="mt-2 text-gray-600">Sign in to your TechStore account</p>
+        <p className="mt-2 text-gray-600">Sign in to your BIG-BENZ SHOP account</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">

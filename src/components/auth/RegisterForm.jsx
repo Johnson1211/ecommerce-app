@@ -64,7 +64,7 @@ export const RegisterForm = () => {
     <div className="w-full max-w-md mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
-        <p className="mt-2 text-gray-600">Join TechStore today</p>
+        <p className="mt-2 text-gray-600">Join BIG-BENZ SHOP today</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

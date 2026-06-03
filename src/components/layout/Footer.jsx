@@ -8,10 +8,8 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">TS</span>
-              </div>
-              <span className="text-xl font-bold text-white">TechStore</span>
+              <img src="/favicon.png" alt="BIG-BENZ SHOP" className="w-8 h-8 rounded-lg object-cover" />
+              <span className="text-xl font-bold text-white">BIG-BENZ SHOP</span>
             </div>
             <p className="text-sm text-gray-400">
               Your one-stop shop for premium electronics, data bundles, and digital products in Ghana.
@@ -43,7 +41,7 @@ export const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary-400" />
-                support@techstore.com
+                support@bigbenzshop.com
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-primary-400" />
@@ -58,7 +56,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-500">
-          <p>© 2026 TechStore. All rights reserved.</p>
+          <p>© 2026 BIG-BENZ SHOP. All rights reserved.</p>
         </div>
       </div>
     </footer>

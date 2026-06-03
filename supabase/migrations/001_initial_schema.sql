@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS cart (
 -- ============================================
 CREATE TABLE IF NOT EXISTS store_settings (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  store_name TEXT DEFAULT 'TechStore',
+  store_name TEXT DEFAULT 'BIG-BENZ SHOP',
   logo_url TEXT,
   contact_email TEXT,
   paystack_public_key TEXT,
@@ -258,7 +258,7 @@ ON CONFLICT DO NOTHING;
 
 -- Insert store settings
 INSERT INTO store_settings (store_name, contact_email) VALUES
-  ('TechStore', 'support@techstore.com')
+  ('BIG-BENZ SHOP', 'support@bigbenzshop.com')
 ON CONFLICT DO NOTHING;
 
 -- ============================================

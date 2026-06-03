@@ -56,10 +56,8 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">TS</span>
-            </div>
-            <span className="text-xl font-bold text-gray-900">TechStore</span>
+            <img src="/favicon.png" alt="BIG-BENZ SHOP" className="w-8 h-8 rounded-lg object-cover" />
+            <span className="text-xl font-bold text-gray-900">BIG-BENZ SHOP</span>
           </Link>
 
           {/* Desktop Nav */}
