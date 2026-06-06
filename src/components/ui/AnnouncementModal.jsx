@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react'
 import { X, AlertTriangle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 
 export const AnnouncementModal = () => {
+  const { user } = useAuth()
   const [announcement, setAnnouncement] = useState(null)
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    fetchActiveAnnouncement()
-  }, [])
+    if (user) {
+      fetchActiveAnnouncement()
+    } else {
+      setIsOpen(false)
+    }
+  }, [user])
 
   const fetchActiveAnnouncement = async () => {
     try {
