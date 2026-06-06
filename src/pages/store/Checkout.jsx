@@ -154,6 +154,42 @@ export const Checkout = () => {
         console.error('Email preparation error:', emailError)
       }
 
+      // WhatsApp notifications to owner using UltraMsg
+      try {
+        const ultraMsgInstance = import.meta.env.VITE_ULTRAMSG_INSTANCE
+        const ultraMsgToken = import.meta.env.VITE_ULTRAMSG_TOKEN
+        const ownerWhatsapp = import.meta.env.VITE_OWNER_WHATSAPP
+        const itemsText = cartItems.map(item => `- ${item.name} x${item.quantity} (${formatCurrency(item.price * item.quantity)})`).join('\n')
+
+        if (ultraMsgInstance && ultraMsgToken && ownerWhatsapp) {
+          const message = `🔔 *NEW ORDER SUBMITTED!*\n\n` +
+            `*Reference:* ${reference}\n` +
+            `*Customer Name:* ${formData.fullName}\n` +
+            `*Customer Phone:* ${formData.phone}\n` +
+            `*Total Amount:* ${formatCurrency(cartTotal)}\n\n` +
+            `*Order Items:*\n${itemsText}\n\n` +
+            `*Momo Payment Details:*\n` +
+            `• Network: ${momoDetails.network}\n` +
+            `• Number: ${momoDetails.number}\n` +
+            `• Sender Name: ${momoDetails.senderName}\n` +
+            `• Transaction ID: ${momoDetails.transactionId}\n\n` +
+            `_Please log in to the admin dashboard to verify._`
+
+          const params = new URLSearchParams()
+          params.append('token', ultraMsgToken)
+          params.append('to', ownerWhatsapp)
+          params.append('body', message)
+
+          fetch(`https://api.ultramsg.com/${ultraMsgInstance}/messages/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params
+          }).catch(err => console.error('WhatsApp notify fail:', err))
+        }
+      } catch (waError) {
+        console.error('WhatsApp notification preparation error:', waError)
+      }
+
       removeToast(loaderId)
       addToast('Order submitted! Awaiting payment verification.', 'success')
       navigate(`/order-confirmation?ref=${reference}`)
