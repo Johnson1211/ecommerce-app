@@ -12,7 +12,7 @@ export const OrderConfirmation = () => {
   const reference = searchParams.get('ref')
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { addToast } = useToast()
+  const { addToast, removeToast } = useToast()
 
   useEffect(() => {
     if (reference) loadOrder()
@@ -38,9 +38,8 @@ export const OrderConfirmation = () => {
   }
 
   const handleDownload = async (fileUrl, fileName) => {
+    const loaderId = addToast('Generating secure download link...', 'loading', 0)
     try {
-      addToast('Generating secure download link...', 'loading', 0)
-      
       const bucketName = 'digital-files'
       let filePath = ''
       
@@ -53,6 +52,7 @@ export const OrderConfirmation = () => {
       }
 
       if (!filePath) {
+        removeToast(loaderId)
         addToast('Invalid file URL', 'error')
         return
       }
@@ -66,6 +66,7 @@ export const OrderConfirmation = () => {
       if (error) throw error
 
       if (data?.signedUrl) {
+        removeToast(loaderId)
         addToast('Secure link generated! Downloading...', 'success')
         window.open(data.signedUrl, '_blank')
       } else {
@@ -73,6 +74,7 @@ export const OrderConfirmation = () => {
       }
     } catch (err) {
       console.error('Download error:', err)
+      removeToast(loaderId)
       addToast('Download failed. Ensure you are signed in and have paid for this item.', 'error')
     }
   }

@@ -16,11 +16,17 @@ export const Checkout = () => {
   const { cartItems: contextCartItems, cartTotal: contextCartTotal, clearCart } = useCart()
   const { user, profile } = useAuth()
   const navigate = useNavigate()
-  const { addToast } = useToast()
+  const { addToast, removeToast } = useToast()
   const [loading, setLoading] = useState(false)
 
-  const cartItems = directBuyItem ? [directBuyItem] : contextCartItems
-  const cartTotal = directBuyItem ? directBuyItem.price * directBuyItem.quantity : contextCartTotal
+  const isSubAgent = profile?.role === 'sub_agent'
+  const cartItems = (directBuyItem ? [directBuyItem] : contextCartItems).map(item => {
+    if (item.id.toString().startsWith('data-') && isSubAgent && item.sub_agent_price !== null && item.sub_agent_price !== undefined) {
+      return { ...item, price: item.sub_agent_price }
+    }
+    return item
+  })
+  const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
@@ -81,13 +87,13 @@ export const Checkout = () => {
     }
 
     setLoading(true)
-    addToast('Submitting your order...', 'loading', 0)
+    const loaderId = addToast('Submitting your order...', 'loading', 0)
 
     const reference = generateReference()
 
     try {
       const orderItems = cartItems.map(item => ({
-        product_id: item.id,
+        product_id: item.id.toString().startsWith('data-') ? item.id.substring(5) : item.id,
         name: item.name,
         price: item.price,
         quantity: item.quantity,
@@ -148,9 +154,11 @@ export const Checkout = () => {
         console.error('Email preparation error:', emailError)
       }
 
+      removeToast(loaderId)
       addToast('Order submitted! Awaiting payment verification.', 'success')
       navigate(`/order-confirmation?ref=${reference}`)
     } catch (error) {
+      removeToast(loaderId)
       addToast(error.message || 'Failed to submit order', 'error')
     } finally {
       setLoading(false)

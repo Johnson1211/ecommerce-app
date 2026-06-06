@@ -6,6 +6,8 @@ import { useAuth } from './context/AuthContext'
 import { Navbar } from './components/layout/Navbar'
 import { Footer } from './components/layout/Footer'
 import { AdminSidebar } from './components/layout/AdminSidebar'
+import { WhatsAppFAB } from './components/ui/WhatsAppFAB'
+import { AnnouncementModal } from './components/ui/AnnouncementModal'
 
 // Auth Pages
 import { Login } from './pages/auth/Login'
@@ -29,12 +31,15 @@ import { DataPackages } from './pages/admin/DataPackages'
 import { Orders } from './pages/admin/Orders'
 import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
+import { Announcements } from './pages/admin/Announcements'
 
 const StoreLayout = ({ children }) => (
   <div className="min-h-screen flex flex-col bg-white">
     <Navbar />
     <main className="flex-1 pt-16">{children}</main>
     <Footer />
+    <WhatsAppFAB />
+    <AnnouncementModal />
   </div>
 )
 
@@ -108,6 +113,7 @@ const AppRoutes = () => (
     <Route path="/admin/data-packages" element={<ProtectedRoute requireAdmin><AdminLayout><DataPackages /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminLayout><Orders /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminLayout><Reports /></AdminLayout></ProtectedRoute>} />
+    <Route path="/admin/announcements" element={<ProtectedRoute requireAdmin><AdminLayout><Announcements /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
 
     {/* Catch all */}

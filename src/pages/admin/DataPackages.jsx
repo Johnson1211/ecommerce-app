@@ -26,6 +26,7 @@ export const DataPackages = () => {
     sizeGb: '',
     label: '',
     price: '',
+    subAgentPrice: '',
     validityDays: 30,
     isActive: true,
   })
@@ -48,6 +49,7 @@ export const DataPackages = () => {
       size_gb: parseFloat(formData.sizeGb),
       label: formData.label,
       price: parseFloat(formData.price),
+      sub_agent_price: formData.subAgentPrice ? parseFloat(formData.subAgentPrice) : null,
       validity_days: parseInt(formData.validityDays),
       is_active: formData.isActive,
     }
@@ -97,7 +99,7 @@ export const DataPackages = () => {
   }
 
   const resetForm = () => {
-    setFormData({ network: 'MTN', sizeGb: '', label: '', price: '', validityDays: 30, isActive: true })
+    setFormData({ network: 'MTN', sizeGb: '', label: '', price: '', subAgentPrice: '', validityDays: 30, isActive: true })
   }
 
   const openEdit = (pkg) => {
@@ -107,6 +109,7 @@ export const DataPackages = () => {
       sizeGb: pkg.size_gb.toString(),
       label: pkg.label,
       price: pkg.price.toString(),
+      subAgentPrice: pkg.sub_agent_price ? pkg.sub_agent_price.toString() : '',
       validityDays: pkg.validity_days,
       isActive: pkg.is_active,
     })
@@ -174,7 +177,12 @@ export const DataPackages = () => {
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-1">{pkg.label}</h3>
                         <p className="text-sm text-gray-500 mb-3">{pkg.validity_days} days validity</p>
-                        <p className="text-2xl font-bold text-primary-600 mb-4">{formatCurrency(pkg.price)}</p>
+                        <p className="text-2xl font-bold text-primary-600 mb-1">{formatCurrency(pkg.price)}</p>
+                        <p className="text-xs font-semibold text-amber-600 mb-4">
+                          {pkg.sub_agent_price !== null && pkg.sub_agent_price !== undefined 
+                            ? `Sub-Agent: ${formatCurrency(pkg.sub_agent_price)}` 
+                            : 'Sub-Agent: No custom price'}
+                        </p>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" className="flex-1" onClick={() => openEdit(pkg)}>
                             <Pencil className="w-3 h-3 mr-1" />Edit
@@ -215,10 +223,14 @@ export const DataPackages = () => {
               <input type="text" required value={formData.label} onChange={(e) => setFormData(p => ({ ...p, label: e.target.value }))} className={inputClass} placeholder="e.g. 5GB" />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Price (GHS)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">User Price *</label>
               <input type="number" step="0.01" min="0" required value={formData.price} onChange={(e) => setFormData(p => ({ ...p, price: e.target.value }))} className={inputClass} placeholder="0.00" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Sub-Agent Price</label>
+              <input type="number" step="0.01" min="0" value={formData.subAgentPrice} onChange={(e) => setFormData(p => ({ ...p, subAgentPrice: e.target.value }))} className={inputClass} placeholder="Optional" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Validity (days)</label>

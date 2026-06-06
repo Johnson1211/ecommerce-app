@@ -16,6 +16,7 @@ export const ToastProvider = ({ children }) => {
         setToasts(prev => prev.filter(t => t.id !== id))
       }, duration)
     }
+    return id
   }, [])
 
   const removeToast = useCallback((id) => {

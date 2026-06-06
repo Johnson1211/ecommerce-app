@@ -108,6 +108,7 @@ export const Users = () => {
           className="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none bg-white">
           <option value="all">All Roles</option>
           <option value="user">Users</option>
+          <option value="sub_agent">Sub-Agents</option>
           <option value="admin">Admins</option>
         </select>
       </div>
@@ -149,6 +150,7 @@ export const Users = () => {
                           <select value={user.role} onChange={(e) => handleUpdateRole(user.id, e.target.value)}
                             className="appearance-none bg-transparent pr-8 py-1 text-sm font-medium focus:outline-none cursor-pointer">
                             <option value="user">User</option>
+                            <option value="sub_agent">Sub-Agent</option>
                             <option value="admin">Admin</option>
                           </select>
                           <ChevronDown className="w-4 h-4 text-gray-400 absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -205,6 +207,7 @@ export const Users = () => {
             <select value={formData.role} onChange={(e) => setFormData(p => ({ ...p, role: e.target.value }))}
               className={inputClass}>
               <option value="user">User</option>
+              <option value="sub_agent">Sub-Agent</option>
               <option value="admin">Admin</option>
             </select>
           </div>

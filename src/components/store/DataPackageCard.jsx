@@ -14,17 +14,22 @@ const networkColors = {
 }
 
 export const DataPackageCard = ({ pkg }) => {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const { addToast } = useToast()
   const navigate = useNavigate()
   const [buying, setBuying] = useState(false)
+
+  const isSubAgent = profile?.role === 'sub_agent'
+  const hasSubAgentPrice = pkg.sub_agent_price !== null && pkg.sub_agent_price !== undefined
+  const finalPrice = (isSubAgent && hasSubAgentPrice) ? pkg.sub_agent_price : pkg.price
 
   const handleBuyNow = () => {
     setBuying(true)
     const directBuyItem = {
       id: `data-${pkg.id}`,
       name: `${pkg.network} ${pkg.label}`,
-      price: pkg.price,
+      price: finalPrice,
+      sub_agent_price: pkg.sub_agent_price,
       image_url: null,
       category_id: null,
       quantity: 1,
@@ -71,8 +76,18 @@ export const DataPackageCard = ({ pkg }) => {
         <p className="text-sm text-gray-500 mt-1">{pkg.network} Data Bundle</p>
       </div>
 
-      <div className="text-center mb-4">
-        <span className="text-3xl font-bold text-primary-600">{formatCurrency(pkg.price)}</span>
+      <div className="text-center mb-4 min-h-[50px] flex flex-col justify-center items-center">
+        {isSubAgent && hasSubAgentPrice ? (
+          <>
+            <span className="text-sm text-gray-400 line-through">{formatCurrency(pkg.price)}</span>
+            <span className="text-3xl font-bold text-amber-600 flex items-center gap-1.5 justify-center">
+              {formatCurrency(finalPrice)}
+              <Badge variant="warning" className="text-[9px] py-0.5 px-1.5 uppercase font-bold tracking-wider">Agent</Badge>
+            </span>
+          </>
+        ) : (
+          <span className="text-3xl font-bold text-primary-600">{formatCurrency(pkg.price)}</span>
+        )}
       </div>
 
       <Button
