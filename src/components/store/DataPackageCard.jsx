@@ -18,12 +18,24 @@ export const DataPackageCard = ({ pkg }) => {
   const { addToast } = useToast()
   const navigate = useNavigate()
   const [buying, setBuying] = useState(false)
+  const [showPhoneInput, setShowPhoneInput] = useState(false)
+  const [recipientPhone, setRecipientPhone] = useState('')
 
   const isSubAgent = profile?.role === 'sub_agent'
   const hasSubAgentPrice = pkg.sub_agent_price !== null && pkg.sub_agent_price !== undefined
   const finalPrice = (isSubAgent && hasSubAgentPrice) ? pkg.sub_agent_price : pkg.price
 
   const handleBuyNow = () => {
+    if (!showPhoneInput) {
+      setShowPhoneInput(true)
+      return
+    }
+
+    if (recipientPhone.length < 9) {
+      addToast('Please enter a valid recipient phone number', 'warning')
+      return
+    }
+
     setBuying(true)
     const directBuyItem = {
       id: `data-${pkg.id}`,
@@ -33,7 +45,12 @@ export const DataPackageCard = ({ pkg }) => {
       image_url: null,
       category_id: null,
       quantity: 1,
-      metadata: { network: pkg.network, size_gb: pkg.size_gb, validity: pkg.validity_days },
+      metadata: { 
+        network: pkg.network, 
+        size_gb: pkg.size_gb, 
+        validity: pkg.validity_days,
+        recipient_phone: recipientPhone
+      },
       file_url: null,
     }
 
@@ -90,13 +107,28 @@ export const DataPackageCard = ({ pkg }) => {
         )}
       </div>
 
+      {showPhoneInput && (
+        <div className="mb-4 text-left animate-in slide-in-from-top duration-200">
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Recipient Phone *</label>
+          <input
+            type="tel"
+            required
+            value={recipientPhone}
+            onChange={(e) => setRecipientPhone(e.target.value.replace(/\D/g, ''))}
+            placeholder="e.g. 0551234567"
+            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+            autoFocus
+          />
+        </div>
+      )}
+
       <Button
         className="w-full"
         onClick={handleBuyNow}
         loading={buying}
       >
         <CreditCard className="w-4 h-4 mr-2" />
-        Buy Now
+        {showPhoneInput ? 'Confirm & Buy' : 'Buy Now'}
       </Button>
     </div>
   )

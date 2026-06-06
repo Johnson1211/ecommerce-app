@@ -34,7 +34,7 @@ import { Settings } from './pages/admin/Settings'
 import { Announcements } from './pages/admin/Announcements'
 
 const StoreLayout = ({ children }) => (
-  <div className="min-h-screen flex flex-col bg-white">
+  <div className="min-h-screen flex flex-col bg-transparent">
     <Navbar />
     <main className="flex-1 pt-16">{children}</main>
     <Footer />

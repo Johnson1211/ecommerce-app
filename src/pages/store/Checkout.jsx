@@ -31,7 +31,7 @@ export const Checkout = () => {
   const [formData, setFormData] = useState({
     fullName: profile?.full_name || '',
     email: profile?.email || user?.email || '',
-    phone: '',
+    phone: directBuyItem?.metadata?.recipient_phone || '',
     address: '',
     city: '',
   })
@@ -45,8 +45,8 @@ export const Checkout = () => {
 
   // Customer MoMo input state
   const [momoDetails, setMomoDetails] = useState({
-    network: 'MTN',
-    number: '',
+    network: directBuyItem?.metadata?.network || 'MTN',
+    number: directBuyItem?.metadata?.recipient_phone || '',
     senderName: '',
     transactionId: ''
   })
