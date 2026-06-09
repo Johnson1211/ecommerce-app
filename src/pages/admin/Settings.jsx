@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Store, CreditCard, Mail } from 'lucide-react'
+import { Save, Store, CreditCard, Mail, AlertTriangle } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 import { Card, CardContent, CardHeader } from '../../components/ui/Card'
 import { Button } from '../../components/ui/Button'
@@ -14,6 +14,7 @@ export const Settings = () => {
     momoNumber: '',
     momoNetwork: 'MTN',
     momoName: '',
+    isMaintenance: false,
   })
   const [loading, setLoading] = useState(false)
   const { addToast } = useToast()
@@ -34,6 +35,7 @@ export const Settings = () => {
         momoNumber: row.momo_number || '',
         momoNetwork: row.momo_network || 'MTN',
         momoName: row.momo_name || '',
+        isMaintenance: row.is_maintenance || false,
       })
     }
   }
@@ -52,6 +54,7 @@ export const Settings = () => {
         momo_number: settings.momoNumber,
         momo_network: settings.momoNetwork,
         momo_name: settings.momoName,
+        is_maintenance: settings.isMaintenance,
         updated_at: new Date().toISOString(),
       }
 
@@ -145,6 +148,26 @@ export const Settings = () => {
                       placeholder="Joyce Marfo"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Maintenance Mode */}
+              <div className="border-t pt-5 mt-5">
+                <h3 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-505 text-amber-500" />
+                  System Status & Maintenance
+                </h3>
+                <div className="flex items-center gap-2.5 bg-amber-50/50 border border-amber-100 p-4 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="isMaintenance"
+                    checked={settings.isMaintenance}
+                    onChange={(e) => setSettings(p => ({ ...p, isMaintenance: e.target.checked }))}
+                    className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer"
+                  />
+                  <label htmlFor="isMaintenance" className="text-sm text-gray-805 text-gray-800 font-semibold select-none cursor-pointer">
+                    Enable Maintenance Mode (closes the storefront to customers)
+                  </label>
                 </div>
               </div>
               <div className="pt-2">

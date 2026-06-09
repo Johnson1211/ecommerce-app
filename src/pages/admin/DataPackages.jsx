@@ -29,6 +29,7 @@ export const DataPackages = () => {
     subAgentPrice: '',
     validityDays: 30,
     isActive: true,
+    isMashup: false,
   })
 
   useEffect(() => { loadPackages() }, [networkFilter])
@@ -52,6 +53,7 @@ export const DataPackages = () => {
       sub_agent_price: formData.subAgentPrice ? parseFloat(formData.subAgentPrice) : null,
       validity_days: parseInt(formData.validityDays),
       is_active: formData.isActive,
+      is_mashup: formData.isMashup,
     }
 
     try {
@@ -99,7 +101,7 @@ export const DataPackages = () => {
   }
 
   const resetForm = () => {
-    setFormData({ network: 'MTN', sizeGb: '', label: '', price: '', subAgentPrice: '', validityDays: 30, isActive: true })
+    setFormData({ network: 'MTN', sizeGb: '', label: '', price: '', subAgentPrice: '', validityDays: 30, isActive: true, isMashup: false })
   }
 
   const openEdit = (pkg) => {
@@ -112,6 +114,7 @@ export const DataPackages = () => {
       subAgentPrice: pkg.sub_agent_price ? pkg.sub_agent_price.toString() : '',
       validityDays: pkg.validity_days,
       isActive: pkg.is_active,
+      isMashup: pkg.is_mashup || false,
     })
     setShowModal(true)
   }
@@ -170,7 +173,10 @@ export const DataPackages = () => {
                     <Card key={pkg.id} className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between mb-3">
-                          <Badge variant="primary" className="text-xs">{pkg.network}</Badge>
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="primary" className="text-xs">{pkg.network}</Badge>
+                            {pkg.is_mashup && <Badge variant="default" className="text-[10px] bg-purple-600 text-white border-none py-0.5 px-1.5 font-bold">Mashup</Badge>}
+                          </div>
                           <button onClick={() => handleToggleActive(pkg)} className="p-1 rounded hover:bg-gray-100">
                             {pkg.is_active ? <ToggleRight className="w-5 h-5 text-green-500" /> : <ToggleLeft className="w-5 h-5 text-gray-400" />}
                           </button>
@@ -237,9 +243,15 @@ export const DataPackages = () => {
               <input type="number" min="1" required value={formData.validityDays} onChange={(e) => setFormData(p => ({ ...p, validityDays: e.target.value }))} className={inputClass} placeholder="30" />
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <input type="checkbox" id="pkgActive" checked={formData.isActive} onChange={(e) => setFormData(p => ({ ...p, isActive: e.target.checked }))} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
-            <label htmlFor="pkgActive" className="text-sm text-gray-700">Active</label>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="pkgActive" checked={formData.isActive} onChange={(e) => setFormData(p => ({ ...p, isActive: e.target.checked }))} className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500" />
+              <label htmlFor="pkgActive" className="text-sm text-gray-700 select-none">Active</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="pkgMashup" checked={formData.isMashup} onChange={(e) => setFormData(p => ({ ...p, isMashup: e.target.checked }))} className="w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500" />
+              <label htmlFor="pkgMashup" className="text-sm text-purple-700 font-semibold select-none">Mashup Special Offer 🔥</label>
+            </div>
           </div>
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="ghost" onClick={() => setShowModal(false)} className="flex-1">Cancel</Button>

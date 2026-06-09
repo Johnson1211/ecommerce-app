@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { ToastProvider } from './components/ui/Toast'
@@ -8,6 +9,8 @@ import { Footer } from './components/layout/Footer'
 import { AdminSidebar } from './components/layout/AdminSidebar'
 import { WhatsAppFAB } from './components/ui/WhatsAppFAB'
 import { AnnouncementModal } from './components/ui/AnnouncementModal'
+import { supabase } from './lib/supabase'
+import { AlertTriangle } from 'lucide-react'
 
 // Auth Pages
 import { Login } from './pages/auth/Login'
@@ -34,15 +37,67 @@ import { Settings } from './pages/admin/Settings'
 import { Announcements } from './pages/admin/Announcements'
 import { Rankings } from './pages/admin/Rankings'
 
-const StoreLayout = ({ children }) => (
-  <div className="min-h-screen flex flex-col bg-transparent">
-    <Navbar />
-    <main className="flex-1 pt-16">{children}</main>
-    <Footer />
-    <WhatsAppFAB />
-    <AnnouncementModal />
-  </div>
-)
+const StoreLayout = ({ children }) => {
+  const { profile } = useAuth()
+  const [maintenance, setMaintenance] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    checkMaintenance()
+  }, [])
+
+  const checkMaintenance = async () => {
+    try {
+      const { data } = await supabase.from('store_settings').select('is_maintenance').limit(1)
+      if (data && data.length > 0) {
+        setMaintenance(data[0].is_maintenance || false)
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600" />
+      </div>
+    )
+  }
+
+  if (maintenance && profile?.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-950 text-white text-center">
+        <div className="max-w-md space-y-6">
+          <div className="w-20 h-20 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto text-amber-500 animate-bounce">
+            <AlertTriangle className="w-10 h-10" />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight">Site Under Maintenance</h1>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            We are currently updating our systems to serve you better. We will be back online shortly. Thank you for your patience!
+          </p>
+          <div className="pt-4 border-t border-slate-905 border-slate-900">
+            <Link to="/login" className="text-xs text-gray-500 hover:text-white transition-colors underline">
+              Admin Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-transparent">
+      <Navbar />
+      <main className="flex-1 pt-16">{children}</main>
+      <Footer />
+      <WhatsAppFAB />
+      <AnnouncementModal />
+    </div>
+  )
+}
 
 const AdminLayout = ({ children }) => (
   <div className="min-h-screen bg-gray-50 flex">
