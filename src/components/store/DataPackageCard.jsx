@@ -97,7 +97,7 @@ export const DataPackageCard = ({ pkg }) => {
           </div>
           <Badge variant={isMashup ? "secondary" : "outline"} className={cn("text-xs", isMashup && "text-white border-white/20 bg-white/10")}>
             <Clock className="w-3 h-3 mr-1" />
-            {pkg.validity_days} days
+            {pkg.validity_days ? `${pkg.validity_days} days` : 'Non-Expiry'}
           </Badge>
         </div>
 

@@ -7,7 +7,7 @@ import { Modal } from '../../components/ui/Modal'
 import { Badge } from '../../components/ui/Badge'
 import { Skeleton } from '../../components/ui/Skeleton'
 import { useToast } from '../../components/ui/Toast'
-import { formatCurrency } from '../../lib/helpers'
+import { formatCurrency, cn } from '../../lib/helpers'
 
 const networks = ['MTN', 'AirtelTigo', 'Telecel']
 
@@ -30,6 +30,7 @@ export const DataPackages = () => {
     validityDays: 30,
     isActive: true,
     isMashup: false,
+    isNonExpiry: false,
   })
 
   useEffect(() => { loadPackages() }, [networkFilter])
@@ -51,7 +52,7 @@ export const DataPackages = () => {
       label: formData.label,
       price: parseFloat(formData.price),
       sub_agent_price: formData.subAgentPrice ? parseFloat(formData.subAgentPrice) : null,
-      validity_days: parseInt(formData.validityDays),
+      validity_days: formData.isNonExpiry ? null : (formData.validityDays ? parseInt(formData.validityDays) : null),
       is_active: formData.isActive,
       is_mashup: formData.isMashup,
     }
@@ -101,7 +102,7 @@ export const DataPackages = () => {
   }
 
   const resetForm = () => {
-    setFormData({ network: 'MTN', sizeGb: '', label: '', price: '', subAgentPrice: '', validityDays: 30, isActive: true, isMashup: false })
+    setFormData({ network: 'MTN', sizeGb: '', label: '', price: '', subAgentPrice: '', validityDays: 30, isActive: true, isMashup: false, isNonExpiry: false })
   }
 
   const openEdit = (pkg) => {
@@ -112,9 +113,10 @@ export const DataPackages = () => {
       label: pkg.label,
       price: pkg.price.toString(),
       subAgentPrice: pkg.sub_agent_price ? pkg.sub_agent_price.toString() : '',
-      validityDays: pkg.validity_days,
+      validityDays: pkg.validity_days ? pkg.validity_days.toString() : '',
       isActive: pkg.is_active,
       isMashup: pkg.is_mashup || false,
+      isNonExpiry: !pkg.validity_days,
     })
     setShowModal(true)
   }
@@ -182,7 +184,7 @@ export const DataPackages = () => {
                           </button>
                         </div>
                         <h3 className="text-xl font-bold text-gray-900 mb-1">{pkg.label}</h3>
-                        <p className="text-sm text-gray-500 mb-3">{pkg.validity_days} days validity</p>
+                        <p className="text-sm text-gray-500 mb-3">{pkg.validity_days ? `${pkg.validity_days} days validity` : 'Non-Expiry'}</p>
                         <p className="text-2xl font-bold text-primary-600 mb-1">{formatCurrency(pkg.price)}</p>
                         <p className="text-xs font-semibold text-amber-600 mb-4">
                           {pkg.sub_agent_price !== null && pkg.sub_agent_price !== undefined 
@@ -222,7 +224,7 @@ export const DataPackages = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Size (GB)</label>
-              <input type="number" step="0.5" min="0.5" required value={formData.sizeGb} onChange={(e) => setFormData(p => ({ ...p, sizeGb: e.target.value }))} className={inputClass} placeholder="e.g. 5" />
+              <input type="number" step="any" min="0.1" required value={formData.sizeGb} onChange={(e) => setFormData(p => ({ ...p, sizeGb: e.target.value }))} className={inputClass} placeholder="e.g. 5" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Label</label>
@@ -240,7 +242,28 @@ export const DataPackages = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Validity (days)</label>
-              <input type="number" min="1" required value={formData.validityDays} onChange={(e) => setFormData(p => ({ ...p, validityDays: e.target.value }))} className={inputClass} placeholder="30" />
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number" 
+                  min="1" 
+                  required={!formData.isNonExpiry} 
+                  disabled={formData.isNonExpiry}
+                  value={formData.isNonExpiry ? '' : formData.validityDays} 
+                  onChange={(e) => setFormData(p => ({ ...p, validityDays: e.target.value }))} 
+                  className={cn(inputClass, formData.isNonExpiry && "bg-gray-100 cursor-not-allowed text-gray-400")} 
+                  placeholder="30" 
+                />
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <input 
+                    type="checkbox" 
+                    id="pkgNonExpiry" 
+                    checked={formData.isNonExpiry} 
+                    onChange={(e) => setFormData(p => ({ ...p, isNonExpiry: e.target.checked }))} 
+                    className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500 cursor-pointer" 
+                  />
+                  <label htmlFor="pkgNonExpiry" className="text-xs font-semibold text-gray-700 select-none cursor-pointer">Non-Expiry</label>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-6">
