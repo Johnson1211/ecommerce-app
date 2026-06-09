@@ -56,9 +56,14 @@ export const LoginForm = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Password
-          </label>
+          <div className="flex justify-between items-center mb-1.5">
+            <label className="block text-sm font-medium text-gray-700">
+              Password
+            </label>
+            <Link to="/forgot-password" className="text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors">
+              Forgot Password?
+            </Link>
+          </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input

@@ -42,6 +42,35 @@ export const RegisterForm = () => {
     try {
       const data = await signUp(formData.email, formData.password, formData.fullName, formData.phone, 'user')
       
+      // Send welcome email via EmailJS
+      try {
+        const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID
+        const templateId = import.meta.env.VITE_EMAILJS_WELCOME_TEMPLATE_ID || import.meta.env.VITE_EMAILJS_TEMPLATE_ID
+        const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY
+        
+        if (serviceId && templateId && publicKey) {
+          fetch('https://api.emailjs.com/api/v1.0/email/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              service_id: serviceId,
+              template_id: templateId,
+              user_id: publicKey,
+              template_params: {
+                to_email: formData.email,
+                customer_name: formData.fullName,
+                customer_email: formData.email,
+                customer_phone: formData.phone || 'N/A',
+                welcome_message: `Welcome to BIG-BENZ SHOP! We are thrilled to have you as a customer. Explore our affordable data packages and other premium digital services.`,
+                subject: 'Welcome to BIG-BENZ SHOP!'
+              }
+            })
+          }).catch(emailErr => console.error('Welcome email send fail:', emailErr))
+        }
+      } catch (emailError) {
+        console.error('Welcome email prep error:', emailError)
+      }
+
       if (data?.session) {
         addToast('Account created and signed in successfully!', 'success')
         const from = location.state?.from || '/'
