@@ -32,6 +32,7 @@ import { Orders } from './pages/admin/Orders'
 import { Reports } from './pages/admin/Reports'
 import { Settings } from './pages/admin/Settings'
 import { Announcements } from './pages/admin/Announcements'
+import { Rankings } from './pages/admin/Rankings'
 
 const StoreLayout = ({ children }) => (
   <div className="min-h-screen flex flex-col bg-transparent">
@@ -114,6 +115,7 @@ const AppRoutes = () => (
     <Route path="/admin/orders" element={<ProtectedRoute requireAdmin><AdminLayout><Orders /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/reports" element={<ProtectedRoute requireAdmin><AdminLayout><Reports /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/announcements" element={<ProtectedRoute requireAdmin><AdminLayout><Announcements /></AdminLayout></ProtectedRoute>} />
+    <Route path="/admin/rankings" element={<ProtectedRoute requireAdmin><AdminLayout><Rankings /></AdminLayout></ProtectedRoute>} />
     <Route path="/admin/settings" element={<ProtectedRoute requireAdmin><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
 
     {/* Catch all */}

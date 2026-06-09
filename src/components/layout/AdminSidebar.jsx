@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { 
   LayoutDashboard, Users, Package, ShoppingBag, 
   Settings, ChevronLeft, ChevronRight, LogOut,
-  Database, FolderOpen, CreditCard, Menu, X, AlertCircle, Bell
+  Database, FolderOpen, CreditCard, Menu, X, AlertCircle, Bell, Trophy
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { cn } from '../../lib/helpers'
@@ -11,6 +11,7 @@ import { cn } from '../../lib/helpers'
 const menuItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/admin/users', icon: Users, label: 'Users' },
+  { to: '/admin/rankings', icon: Trophy, label: 'Rankings' },
   { to: '/admin/categories', icon: FolderOpen, label: 'Categories' },
   { to: '/admin/products', icon: Package, label: 'Products' },
   { to: '/admin/data-packages', icon: Database, label: 'Data Packages' },
